@@ -14,6 +14,9 @@ export async function requireUser() {
   const claims = data?.claims;
 
   if (error || !claims?.sub) {
+    // An error here (for example a network problem) is logged so it can be
+    // told apart from a normal "not logged in".
+    if (error) console.error("[auth] session check failed:", { name: error.name, message: error.message });
     redirect("/login");
   }
 

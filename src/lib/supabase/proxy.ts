@@ -40,8 +40,11 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Do not put other code between createServerClient and getClaims().
-  const { data } = await supabase.auth.getClaims();
+  const { data, error } = await supabase.auth.getClaims();
   const isLoggedIn = Boolean(data?.claims?.sub);
+  if (error && !isLoggedIn) {
+    console.error("[proxy] session check failed:", { name: error.name, message: error.message });
+  }
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
