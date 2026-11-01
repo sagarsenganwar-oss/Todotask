@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Cache Components is off: every page shows private data that must be
+  // read fresh from the database on each request.
   turbopack: {
     rules: {
       "*.css": {
