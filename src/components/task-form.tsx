@@ -13,6 +13,8 @@ type Props = {
   projects: Project[];
   /** Project selected for a new task. */
   defaultProjectId: string;
+  /** Due date ("YYYY-MM-DD") filled in for a new task, e.g. in Today. */
+  defaultDueDate?: string;
   /** When given, the form edits this task instead of creating one. */
   task?: Task;
   /** Called after a successful save or when the user clicks Cancel. */
@@ -22,7 +24,7 @@ type Props = {
 const inputClass =
   "w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-base outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-neutral-700";
 
-export function TaskForm({ projects, defaultProjectId, task, onClose }: Props) {
+export function TaskForm({ projects, defaultProjectId, defaultDueDate, task, onClose }: Props) {
   const isEdit = Boolean(task);
   const [state, formAction, pending] = useActionState<TaskFormState, FormData>(
     isEdit ? updateTask : createTask,
@@ -42,7 +44,7 @@ export function TaskForm({ projects, defaultProjectId, task, onClose }: Props) {
   const v: TaskFormValues = state?.values ?? {
     title: task?.title ?? "",
     description: task?.description ?? "",
-    due_date: task?.due_date ?? "",
+    due_date: task ? (task.due_date ?? "") : (defaultDueDate ?? ""),
     priority: String(task?.priority ?? 4),
     project_id: task?.project_id ?? defaultProjectId,
   };

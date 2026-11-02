@@ -4,13 +4,27 @@ import { useCallback, useState } from "react";
 import type { Project } from "@/lib/types";
 import { TaskForm } from "./task-form";
 
+type Props = {
+  projects: Project[];
+  defaultProjectId: string;
+  /** Due date filled in for the new task (used in Today and Upcoming). */
+  defaultDueDate?: string;
+};
+
 /** The "+ Add task" button that opens the new-task form. */
-export function AddTask({ projects, defaultProjectId }: { projects: Project[]; defaultProjectId: string }) {
+export function AddTask({ projects, defaultProjectId, defaultDueDate }: Props) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
 
   if (open) {
-    return <TaskForm projects={projects} defaultProjectId={defaultProjectId} onClose={close} />;
+    return (
+      <TaskForm
+        projects={projects}
+        defaultProjectId={defaultProjectId}
+        defaultDueDate={defaultDueDate}
+        onClose={close}
+      />
+    );
   }
   return (
     <button
