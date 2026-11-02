@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useActionState, useEffect, useState, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 import type { Project } from "@/lib/types";
 import { createProject, type ProjectFormState } from "@/app/projects/actions";
 import { logout } from "@/app/auth-actions";
+import { NETWORK_ERROR, field, withNetworkError } from "@/lib/network";
+
+const safeCreateProject = withNetworkError(createProject, (formData): ProjectFormState => ({
+  error: NETWORK_ERROR,
+  name: field(formData, "name"),
+}));
 
 type Props = {
   email: string;
@@ -116,12 +123,7 @@ export function AppShell({ email, projects, counts, children }: Props) {
             {email}
           </p>
           <form action={logout}>
-            <button
-              type="submit"
-              className="mt-1 w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-neutral-200 dark:hover:bg-neutral-800"
-            >
-              Log out
-            </button>
+            <LogoutButton />
           </form>
         </div>
       </aside>
@@ -165,7 +167,7 @@ function NavLink({
 
 function AddProjectForm() {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<ProjectFormState, FormData>(createProject, undefined);
+  const [state, formAction, pending] = useActionState<ProjectFormState, FormData>(safeCreateProject, undefined);
 
   if (!open) {
     return (
@@ -195,7 +197,7 @@ function AddProjectForm() {
         placeholder="Project name"
         maxLength={100}
         autoFocus
-        className="rounded-md border border-neutral-300 bg-transparent px-2 py-1.5 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-neutral-700"
+        className="rounded-md border border-neutral-300 bg-transparent px-2 py-1.5 text-base outline-none sm:text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-neutral-700"
       />
       {state?.error && (
         <p role="alert" className="text-xs text-red-600">
@@ -219,5 +221,19 @@ function AddProjectForm() {
         </button>
       </div>
     </form>
+  );
+}
+
+/** Shows "Logging out…" while the logout is in progress. */
+function LogoutButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="mt-1 w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-neutral-200 disabled:opacity-60 dark:hover:bg-neutral-800"
+    >
+      {pending ? "Logging out…" : "Log out"}
+    </button>
   );
 }

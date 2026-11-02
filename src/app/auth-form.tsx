@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { NETWORK_ERROR, field, withNetworkError } from "@/lib/network";
 import type { AuthFormState } from "./auth-actions";
 
 type Props = {
@@ -10,7 +11,10 @@ type Props = {
 };
 
 export function AuthForm({ mode, action }: Props) {
-  const [state, formAction, pending] = useActionState(action, undefined);
+  const [safeAction] = useState(() =>
+    withNetworkError(action, (formData): AuthFormState => ({ error: NETWORK_ERROR, email: field(formData, "email") })),
+  );
+  const [state, formAction, pending] = useActionState(safeAction, undefined);
   const isLogin = mode === "login";
 
   return (

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Project, Task } from "@/lib/types";
 import { TaskItem } from "./task-item";
 
@@ -6,13 +7,14 @@ type Props = {
   projects: Project[];
   today: string;
   showProject?: boolean;
-  /** Text shown when there are no tasks. Leave empty to show nothing. */
-  emptyText?: string;
+  /** Shown when there are no tasks: short text or an EmptyState. Leave out to show nothing. */
+  empty?: ReactNode;
 };
 
-export function TaskList({ tasks, projects, today, showProject = false, emptyText }: Props) {
+export function TaskList({ tasks, projects, today, showProject = false, empty }: Props) {
   if (tasks.length === 0) {
-    return emptyText ? <p className="py-4 text-center text-sm text-neutral-500">{emptyText}</p> : null;
+    if (typeof empty === "string") return <p className="py-3 text-sm text-neutral-500">{empty}</p>;
+    return empty ?? null;
   }
   return (
     <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">

@@ -8,6 +8,7 @@ import {
   type TaskFormState,
   type TaskFormValues,
 } from "@/app/tasks/actions";
+import { NETWORK_ERROR, field, withNetworkError } from "@/lib/network";
 
 type Props = {
   projects: Project[];
@@ -21,13 +22,29 @@ type Props = {
   onClose?: () => void;
 };
 
-const inputClass =
-  "w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-base outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-neutral-700";
+// On a connection failure, keep what the user typed and show a message.
+const keepValues = (formData: FormData): TaskFormState => ({
+  error: NETWORK_ERROR,
+  values: {
+    title: field(formData, "title"),
+    description: field(formData, "description"),
+    due_date: field(formData, "due_date"),
+    priority: field(formData, "priority"),
+    project_id: field(formData, "project_id"),
+  },
+});
+const safeCreateTask = withNetworkError(createTask, keepValues);
+const safeUpdateTask = withNetworkError(updateTask, keepValues);
+
+const fieldBase =
+  "w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-neutral-700";
+// 16px text on phones (smaller makes iPhones zoom in), 14px on larger screens.
+const inputClass = `${fieldBase} text-base sm:text-sm`;
 
 export function TaskForm({ projects, defaultProjectId, defaultDueDate, task, onClose }: Props) {
   const isEdit = Boolean(task);
   const [state, formAction, pending] = useActionState<TaskFormState, FormData>(
-    isEdit ? updateTask : createTask,
+    isEdit ? safeUpdateTask : safeCreateTask,
     undefined,
   );
   const titleRef = useRef<HTMLInputElement>(null);
@@ -69,7 +86,7 @@ export function TaskForm({ projects, defaultProjectId, defaultDueDate, task, onC
           maxLength={500}
           required
           autoFocus
-          className={`${inputClass} font-medium`}
+          className={`${fieldBase} text-base font-medium`}
         />
         <label className="sr-only" htmlFor={`desc-${task?.id ?? "new"}`}>Description</label>
         <textarea
@@ -79,16 +96,16 @@ export function TaskForm({ projects, defaultProjectId, defaultDueDate, task, onC
           placeholder="Description (optional)"
           rows={2}
           maxLength={5000}
-          className={`${inputClass} text-sm`}
+          className={inputClass}
         />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="flex flex-col gap-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">
             Due date
-            <input type="date" name="due_date" defaultValue={v.due_date} className={`${inputClass} text-sm`} />
+            <input type="date" name="due_date" defaultValue={v.due_date} className={inputClass} />
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">
             Priority
-            <select name="priority" defaultValue={v.priority} className={`${inputClass} text-sm`}>
+            <select name="priority" defaultValue={v.priority} className={inputClass}>
               <option value="1">P1 (urgent)</option>
               <option value="2">P2 (high)</option>
               <option value="3">P3 (medium)</option>
@@ -97,7 +114,7 @@ export function TaskForm({ projects, defaultProjectId, defaultDueDate, task, onC
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">
             Project
-            <select name="project_id" defaultValue={v.project_id} className={`${inputClass} text-sm`}>
+            <select name="project_id" defaultValue={v.project_id} className={inputClass}>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AddTask } from "@/components/add-task";
+import { EmptyState } from "@/components/empty-state";
 import { TaskList } from "@/components/task-list";
 import { getProjects, getTodayDate, getTodayTasks } from "@/lib/data";
 import { dueLabel } from "@/lib/dates";
@@ -40,7 +41,15 @@ export default async function TodayPage() {
           projects={projects}
           today={today}
           showProject
-          emptyText={nothing ? "Nothing due today. Enjoy your day! 🎉" : "Nothing else due today."}
+          empty={
+            nothing ? (
+              <EmptyState icon="🎉" title="Nothing due today">
+                Enjoy your day! Tasks with today&apos;s date or an overdue date show up here.
+              </EmptyState>
+            ) : (
+              "Nothing else due today."
+            )
+          }
         />
         <div className="border-t border-neutral-200 pt-2 dark:border-neutral-800">
           <AddTask projects={projects} defaultProjectId={inbox.id} defaultDueDate={today} />

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EmptyState } from "@/components/empty-state";
 import { TaskList } from "@/components/task-list";
 import { getCompletedTasks, getProjects, getTodayDate } from "@/lib/data";
 
@@ -18,7 +19,11 @@ export default async function CompletedPage() {
         projects={projects}
         today={today}
         showProject
-        emptyText="No completed tasks yet. Finished tasks show up here."
+        empty={
+          <EmptyState icon="✅" title="No completed tasks yet">
+            When you tick the circle next to a task, it moves here.
+          </EmptyState>
+        }
       />
     </>
   );

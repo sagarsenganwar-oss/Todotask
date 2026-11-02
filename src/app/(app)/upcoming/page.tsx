@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AddTask } from "@/components/add-task";
+import { EmptyState } from "@/components/empty-state";
 import { TaskList } from "@/components/task-list";
 import { getProjects, getTodayDate, getUpcomingTasks } from "@/lib/data";
 import { dueLabel } from "@/lib/dates";
@@ -18,6 +19,7 @@ function longDate(day: string) {
 export default async function UpcomingPage() {
   const [projects, today, groups] = await Promise.all([getProjects(), getTodayDate(), getUpcomingTasks()]);
   const inbox = projects.find((p) => p.is_inbox)!;
+  const nothing = groups.every((g) => g.tasks.length === 0);
 
   return (
     <>
@@ -25,6 +27,12 @@ export default async function UpcomingPage() {
         <h1 className="text-2xl font-bold">Upcoming</h1>
         <p className="text-sm text-neutral-500">Tasks due in the next 7 days</p>
       </div>
+
+      {nothing && (
+        <EmptyState icon="🗓️" title="Nothing planned for the next 7 days">
+          Add a task to any day below, or give a task a due date.
+        </EmptyState>
+      )}
 
       {groups.map(({ day, tasks }) => {
         const label = dueLabel(day, today);
@@ -35,7 +43,7 @@ export default async function UpcomingPage() {
               {relative ? `${label} · ${longDate(day)}` : longDate(day)}
               <span className="ml-2 font-normal text-neutral-500">{tasks.length > 0 ? tasks.length : ""}</span>
             </h2>
-            <TaskList tasks={tasks} projects={projects} today={today} showProject emptyText="No tasks." />
+            <TaskList tasks={tasks} projects={projects} today={today} showProject empty="No tasks." />
             <AddTask projects={projects} defaultProjectId={inbox.id} defaultDueDate={day} />
           </section>
         );

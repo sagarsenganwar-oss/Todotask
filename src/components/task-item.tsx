@@ -4,7 +4,12 @@ import { useActionState, useCallback, useState } from "react";
 import { dueLabel } from "@/lib/dates";
 import type { Project, Task } from "@/lib/types";
 import { deleteTask, setTaskCompleted, type TaskActionState } from "@/app/tasks/actions";
+import { NETWORK_ERROR, withNetworkError } from "@/lib/network";
 import { TaskForm } from "./task-form";
+
+const networkError = (): TaskActionState => ({ error: NETWORK_ERROR });
+const safeSetCompleted = withNetworkError(setTaskCompleted, networkError);
+const safeDeleteTask = withNetworkError(deleteTask, networkError);
 
 const PRIORITY_STYLE: Record<number, { ring: string; text: string }> = {
   1: { ring: "border-red-600 bg-red-50 dark:bg-red-950", text: "text-red-600" },
@@ -24,8 +29,8 @@ type Props = {
 export function TaskItem({ task, projects, today, showProject = false }: Props) {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [toggleState, toggleAction, toggling] = useActionState<TaskActionState, FormData>(setTaskCompleted, undefined);
-  const [deleteState, deleteAction, deleting] = useActionState<TaskActionState, FormData>(deleteTask, undefined);
+  const [toggleState, toggleAction, toggling] = useActionState<TaskActionState, FormData>(safeSetCompleted, undefined);
+  const [deleteState, deleteAction, deleting] = useActionState<TaskActionState, FormData>(safeDeleteTask, undefined);
   const closeEditor = useCallback(() => setEditing(false), []);
 
   const done = Boolean(task.completed_at);
@@ -44,7 +49,7 @@ export function TaskItem({ task, projects, today, showProject = false }: Props) 
 
   return (
     <li className={`group flex items-start gap-3 py-3 ${toggling || deleting ? "opacity-50" : ""}`}>
-      <form action={toggleAction}>
+      <form action={toggleAction} className="shrink-0">
         <input type="hidden" name="id" value={task.id} />
         <input type="hidden" name="completed" value={done ? "0" : "1"} />
         <button
@@ -52,13 +57,18 @@ export function TaskItem({ task, projects, today, showProject = false }: Props) 
           disabled={toggling}
           aria-label={done ? `Mark "${task.title}" as not completed` : `Complete "${task.title}"`}
           title={done ? "Mark as not completed" : "Complete"}
-          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${style.ring} ${done ? "bg-neutral-400! border-neutral-400!" : ""}`}
+          className="-m-2 p-2"
         >
-          {done && (
-            <svg viewBox="0 0 16 16" className="h-3 w-3 text-white" aria-hidden="true">
-              <path fill="none" stroke="currentColor" strokeWidth="2.5" d="M3 8.5l3 3 7-7" />
-            </svg>
-          )}
+          {/* The padding makes the tap area bigger than the visible circle. */}
+          <span
+            className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 ${style.ring} ${done ? "bg-neutral-400! border-neutral-400!" : ""}`}
+          >
+            {done && (
+              <svg viewBox="0 0 16 16" className="h-3 w-3 text-white" aria-hidden="true">
+                <path fill="none" stroke="currentColor" strokeWidth="2.5" d="M3 8.5l3 3 7-7" />
+              </svg>
+            )}
+          </span>
         </button>
       </form>
 
@@ -114,7 +124,7 @@ export function TaskItem({ task, projects, today, showProject = false }: Props) 
             onClick={() => setEditing(true)}
             aria-label={`Edit "${task.title}"`}
             title="Edit"
-            className="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+            className="rounded p-2 text-neutral-500 sm:p-1.5 hover:bg-neutral-100 hover:text-neutral-800 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
               <path fill="currentColor" d="M14.7 2.3a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L7.4 15.6 3 17l1.4-4.4L14.7 2.3z" />
@@ -126,7 +136,7 @@ export function TaskItem({ task, projects, today, showProject = false }: Props) 
           onClick={() => setConfirmDelete(true)}
           aria-label={`Delete "${task.title}"`}
           title="Delete"
-          className="rounded p-1.5 text-neutral-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+          className="rounded p-2 text-neutral-500 sm:p-1.5 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
         >
           <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
             <path fill="currentColor" d="M7 2h6l1 2h4v2H2V4h4l1-2zm-3 6h12l-1 10H5L4 8z" />

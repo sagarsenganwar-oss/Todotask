@@ -1,6 +1,7 @@
 import { getProjectTasks, getProjects, getTodayDate } from "@/lib/data";
 import type { Project } from "@/lib/types";
 import { AddTask } from "./add-task";
+import { EmptyState } from "./empty-state";
 import { ProjectHeader } from "./project-header";
 import { TaskList } from "./task-list";
 
@@ -21,7 +22,17 @@ export async function ProjectView({ project }: { project: Project }) {
           tasks={open}
           projects={projects}
           today={today}
-          emptyText={project.is_inbox ? "Your Inbox is empty. Add a task below." : "No tasks in this project yet."}
+          empty={
+            project.is_inbox ? (
+              <EmptyState icon="📥" title="Your Inbox is empty">
+                {completed.length > 0 ? "All done here! " : ""}Add a task below. New tasks go here unless you pick another project.
+              </EmptyState>
+            ) : (
+              <EmptyState icon="📋" title={completed.length > 0 ? "All tasks done" : "No tasks yet"}>
+                Add a task to this project below.
+              </EmptyState>
+            )
+          }
         />
         <div className="border-t border-neutral-200 pt-2 dark:border-neutral-800">
           <AddTask projects={projects} defaultProjectId={project.id} />

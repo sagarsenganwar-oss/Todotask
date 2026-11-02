@@ -8,19 +8,26 @@ import {
   type ProjectActionState,
   type ProjectFormState,
 } from "@/app/projects/actions";
+import { NETWORK_ERROR, field, withNetworkError } from "@/lib/network";
+
+const safeRename = withNetworkError(renameProject, (formData): ProjectFormState => ({
+  error: NETWORK_ERROR,
+  name: field(formData, "name"),
+}));
+const safeDelete = withNetworkError(deleteProject, (): ProjectActionState => ({ error: NETWORK_ERROR }));
 
 /** Project title with Rename and Delete (not shown for the Inbox). */
 export function ProjectHeader({ project, taskCount }: { project: Project; taskCount: number }) {
   const [mode, setMode] = useState<"view" | "rename" | "delete">("view");
   const [renameState, renameAction, renaming] = useActionState<ProjectFormState, FormData>(
     async (prev, formData) => {
-      const result = await renameProject(prev, formData);
+      const result = await safeRename(prev, formData);
       if (result?.ok) setMode("view"); // close the form after a successful rename
       return result;
     },
     undefined,
   );
-  const [deleteState, deleteAction, deleting] = useActionState<ProjectActionState, FormData>(deleteProject, undefined);
+  const [deleteState, deleteAction, deleting] = useActionState<ProjectActionState, FormData>(safeDelete, undefined);
 
   if (mode === "rename") {
     return (
